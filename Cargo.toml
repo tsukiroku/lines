@@ -1,0 +1,7 @@
+[package]
+name = "lines"
+version = "0.1.0"
+edition = "2021"
+description = "Get the line of a file in a directory from the CLI."
+
+[dependencies]
