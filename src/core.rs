@@ -1,5 +1,6 @@
 use encoding_rs::UTF_8;
 use encoding_rs_io::DecodeReaderBytesBuilder;
+
 use std::{
     fs::{self, File},
     io::Read,
@@ -8,6 +9,12 @@ use std::{
 pub struct LinesOption<T> {
     pub directory: T,
     pub ignore: Option<T>,
+}
+
+#[derive(Debug)]
+pub struct ResultLines<T> {
+    pub total: T,
+    pub files: T,
 }
 
 pub fn read_lines(path: String) -> usize {
@@ -20,26 +27,34 @@ pub fn read_lines(path: String) -> usize {
     String::from_utf8(buffer).unwrap().lines().count()
 }
 
-pub fn lines(options: LinesOption<String>) -> usize {
-    let mut count: usize = 0;
+pub fn lines(options: LinesOption<String>) -> ResultLines<usize> {
+    let mut res: ResultLines<usize> = ResultLines { total: 0, files: 0 };
+
     for file in fs::read_dir(options.directory).unwrap() {
         let path = file.unwrap().path();
         if let Some(ref ignore) = options.ignore {
-            if (ignore.split(',').map(|s| s.to_string().replace(" ", "")))
-                .collect::<Vec<String>>()
-                .contains(&path.to_str().unwrap().to_string())
+            if (ignore
+                .split(',')
+                .map(|s| s.to_string().replace(" ", "").replace("./", "")))
+            .collect::<Vec<String>>()
+            .contains(&path.to_str().unwrap().replace(" ", "").replace("./", ""))
             {
                 continue;
             }
         }
+
         if path.is_dir() {
-            count += lines(LinesOption {
+            let line = lines(LinesOption {
                 directory: path.to_str().unwrap().to_string(),
                 ignore: None,
             });
+            res.total += line.total;
+            res.files += line.files;
         } else {
-            count += read_lines(path.to_str().unwrap().to_string());
+            res.files += 1;
+            res.total += read_lines(path.to_str().unwrap().to_string())
         };
     }
-    count
+
+    res
 }
