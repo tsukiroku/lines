@@ -7,5 +7,8 @@ pub struct Args {
     pub directory: String,
 
     #[clap(short, long)]
+    pub file: Option<String>,
+
+    #[clap(short, long)]
     pub ignore: Option<String>,
 }
